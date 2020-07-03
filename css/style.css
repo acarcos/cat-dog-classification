@@ -1,0 +1,42 @@
+header {
+    width: 100%;
+    height: 500px;
+    background: url("../images/dogs-cats.jpg");
+    background-size: cover; /* this means I want the picture to be fit in my div */
+}
+
+pre {
+    background: #f4f4f4;
+    border: 1px solid #ddd;
+    border-left: 3px solid purple;
+    color: #666; 
+    page-break-inside: avoid;
+    font-family: monospace;
+    font-size: 13px; 
+    line-height: 1.6;
+    margin-bottom: 1.6em;
+    max-width: 100%;
+    /* overflow: auto; */
+    padding: 1em 1.5em; 
+    display: block;
+    word-wrap: break-word; 
+    /* white-space: pre-wrap;  */
+    /* overflow: visible; */
+}
+
+h1 {
+    font-family:Georgia;
+}
+
+h2 {
+    font-family:Lucida Sans Unicode;
+}
+
+/* 
+code {
+    font-family: Consolas,"courier new";
+    color: crimson;
+    background-color: #f1f1f1;
+    padding: 2px;
+    font-size: 105%;
+}  */

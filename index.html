@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cat and Dog Classification with VGG16</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/scrolling-nav.css" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+</head>
+
+<body id="page-top">
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id="mainNav">
+        <div class="container">
+            <a class="navbar-brand js-scroll-trigger" href="#page-top"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarResponsive">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link js-scroll-trigger" href="#about">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link js-scroll-trigger" href="#coding">Coding</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link js-scroll-trigger" href="#visualization">Visualizations</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="bg-primary text-white">
+        <div class="container text-center" id="header-image">
+          <h1 style="color: #000000">Cats vs Dogs Classification</h1>
+          <p class="lead" style="color: #000000;">Training VGG16 with Transfer Learning</p>
+        </div>
+    </header>
+    
+    <!-- <div class="header-img">
+        <h1> Cat vs Dog Classification using Transfer Learning </h1>
+    </div>
+     -->
+
+    <section id="about">
+        <div class="container">
+          <div class="row">
+            <div class="col-lg-8 mx-auto">
+              <h2>Cats vs. Dogs Competition</h2>
+              <p class="lead">As part of <a href="https://www.kaggle.com/c/dogs-vs-cats" target="_blank">Kaggle competitions</a>, this one refers to a classification between cats and dogs according to a set of images.
+                In this post, the algorithm that we will use to solve this problem is with Convolutional Neural Networks (CNN), using the VGG16 arquitecture with ImageNet as a pre-train model with Transfer Learning.</p>
+            </div>
+          </div>
+        </div>
+    </section>
+
+    <section id="coding" class="bg-light">
+        <div class="container">
+          <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <h2>Coding</h2>
+                <p class="lead"> We start importing the libraries for the analysis.</p>
+                <pre style="text-align: left;">
+                    <code style="text-align: left;">
+        import numpy as np
+        import pandas as pd
+        import matplotlib.pyplot as plt
+        import random
+        import os
+
+        from keras.preprocessing.image import ImageDataGenerator, load_img
+        from keras.utils import to_categorical
+        from sklearn.model_selection import train_test_split
+        from keras.applications import VGG16
+        from keras.models import Model
+        from keras.layers import Dropout, Flatten, Dense
+        from keras.layers.convolutional import Conv2D, MaxPooling2D
+        from keras import backend as K
+        from keras import optimizers
+        from skimage.transform import resize
+        from sklearn.preprocessing import StandardScaler
+                    </code>
+                </pre>
+
+                <p class="lead"> Prepare data for the training process. First, we import the dataset. The label in each image give the classification already. 
+                    So we use this to create a dataframe with the filename and its respective class. For dog class, we will use one, and for cat class, zero.
+                </p>
+                <pre data-lang='scss' class='prettyprint'>
+                    <code>
+        filenames = os.listdir("/content/drive/My Drive/train_catsdogs")
+
+        categories = []
+
+        for f_name in filenames:
+            category = f_name.split('.')[0]
+            if category == 'dog':
+                categories.append(1)
+            else:
+                categories.append(0)
+
+        df = pd.DataFrame({'filename': filenames, 'category': categories})
+                    </code>
+                </pre>
+
+                <p class="lead"> If we want to visualize an image used for training, we can use the next block.</p>
+                <pre data-lang='scss' class='prettyprint'>
+                    <code>
+        sample = random.choice(filenames)
+        image = load_img("/content/drive/My Drive/train_catsdogs/" + sample)
+        plt.imshow(image)
+                    </code>
+                </pre>
+
+                <p class="lead"> Before setting the training and validation datasets, we assign the values for image size, epochs and batch size.</p>
+                <pre data-lang='scss' class='prettyprint'>
+                    <code>
+        image_size = 224
+        input_shape = (image_size, image_size, 3)
+        epochs = 20 
+        batch_size = 40
+                    </code>
+                </pre>
+
+                <p class="lead">With this information, we prepare the training images by replacing the values of cat and dog for 0 and 1, respectively. Next, we train the data for training and validation.
+                    The validation set is done to evaluate the model during the training and corresponds to the 10% of the dataset.
+                </p>
+                <pre data-lang='scss' class='prettyprint'>
+                    <code>
+        df["category"] = df["category"].replace({0:'cat',1:'dog'})
+        train_df, validate_df = train_test_split(df, test_size=0.10) 
+        train_df = train_df.reset_index()
+        total_train = train_df.shape[0]
+                    </code>
+                </pre>
+
+                <p class="lead">To develop the training data, we use data augmentation. This is to "create" more data based on the already dataset we have. This is done by rotating and adding noise 
+                    to the images in the training set.</p>
+                <pre data-lang='scss' class='prettyprint'>
+                    <code>
+        train_datagen = ImageDataGenerator(rotation_range=15, rescale=1./255, 
+                        shear_range=0.2, zoom_range=0.2, 
+                        horizontal_flip = True, width_shift_range=0.1, 
+                        height_shift_range=0.1)
+
+        train_generator = train_datagen.flow_from_dataframe(train_df, 
+                        "/content/drive/My Drive/train_catsdogs", x_col='filename', 
+                        y_col='category', target_size=(image_size, 
+                        image_size), class_mode='binary', batch_size=batch_size)
+                    </code>
+                </pre>
+
+                <p class="lead">The same method is done for the validation set, we use data augmentation to "obtain" more data.</p>
+                <pre data-lang='scss' class='prettyprint'>
+                    <code>
+        validate_df = validate_df.reset_index()
+        total_validate = validate_df.shape[0]
+
+        validation_datagen = ImageDataGenerator(rescale=1./255)
+
+        validation_generator = validation_datagen.flow_from_dataframe(
+                        validate_df, 
+                        "/content/drive/My Drive/train_catsdogs", 
+                        x_col='filename', y_col='category',
+                        class_mode='binary',
+                        target_size=(image_size, image_size),
+                        batch_size=batch_size)
+                    </code>
+                </pre>
+
+                <p class="lead">Now that we have out training and validation datasets, we develop the model by importing the VGG16 arquitecture and the weights from ImageNet.</p>
+                <pre data-lang='scss' class='prettyprint'>
+                    <code>
+        model = VGG16(input_shape=input_shape, weights='imagenet', include_top=False)
+                    </code>
+                </pre>
+
+                <p class="lead"> For Transfer Learning, we freeze all layers so they won't change during the training.</p>
+                <pre data-lang='scss' class='prettyprint'>
+                    <code>
+        for layer in model.layers:
+                layer.trainable = False
+                    </code>
+                </pre>
+
+                <p class="lead"> The layers are arange as...</p>
+                <pre data-lang='scss' class='prettyprint'>
+                    <code>
+        x = model.output
+
+        x = Conv2D(1, (1,1), activation='relu')(x)
+        x = Flatten()(x)
+        x = Dense(512, activation='relu')(x)
+        x = Dropout(0.5)(x)
+        x = Dense(1, activation='sigmoid')(x)
+
+        model = Model(model.input, x)
+                    </code>
+                </pre>
+
+                <p class="lead"> We compile the model.</p>
+                <pre data-lang='scss' class='prettyprint'>
+                    <code>
+        model.compile(loss='binary_crossentropy', optimizer='sgd', metrics=['accuracy'])
+                    </code>
+                </pre>
+
+                <p class="lead"> We can visualize a summary of the model. This is, the parameters to train and layers appearing in our model.</p>
+                <pre data-lang='scss' class='prettyprint'>
+                    <code>
+        model.summary()
+                    </code>
+                </pre>
+
+                <p class="lead"> We train the model using the training and validation datasets.</p>
+                <pre data-lang='scss' class='prettyprint'>
+                    <code>
+        history = model.fit_generator(train_generator, epochs=epochs, 
+                    validation_data=validation_generator, 
+                    validation_steps=total_validate//batch_size, 
+                    steps_per_epoch=total_train//batch_size)
+                    </code>
+                </pre>
+
+                <p class="lead"> We can visualize the best accuracy reached during training.</p>
+                <pre data-lang='scss' class='prettyprint'>
+                    <code>
+        loss, accuracy = model.evaluate_generator(validation_generator, total_validate//batch_size, workers=12)
+        print("Test: accuracy = %f  ;  loss = %f " % (accuracy, loss))
+                    </code>
+                </pre>
+
+                <p class="lead">To make predictions using this training, we prepare a test dataset. Same as with the training and validation sets, we make a dataframe for each image
+                    but here we do not have the class, this will be predicted. These images were not seen by the training or evaluation process.</p>
+                <pre data-lang='scss' class='prettyprint'>
+                    <code>
+        test_filenames = os.listdir("/content/drive/My Drive/test2_catsdogs")
+        test_df = pd.DataFrame({
+                    'filename': test_filenames
+                    })
+        nb_samples = test_df.shape[0]
+                    </code>
+                </pre>
+
+                <p class="lead"> Here, we set the image size and the images will be read by the predicting function.</p>
+                <pre data-lang='scss' class='prettyprint'>
+                    <code>
+        test_gen = ImageDataGenerator(rescale=1./255)
+        test_generator = test_gen.flow_from_dataframe(
+                        test_df, 
+                        "/content/drive/My Drive/test2_catsdogs", 
+                        x_col='filename', y_col=None,
+                        class_mode=None,
+                        batch_size=batch_size,
+                        target_size=(image_size, image_size),
+                        shuffle=False)   
+                    </code>
+                </pre>
+
+                <p class="lead">We develop the predictions.</p>
+                <pre data-lang='scss' class='prettyprint'>
+                    <code>
+        predict = model.predict_generator(test_generator, steps=np.ceil(nb_samples/batch_size))
+        threshold = 0.5
+
+        test_df['category'] = np.where(predict > threshold, 1,0)
+                    </code>
+                </pre>   
+            </div>
+          </div>
+        </div>
+      </section>
+
+    <section id="visualization">
+        <div class="container">
+          <div class="row">
+            <div class="col-lg-8 mx-auto">
+              <h2>Predictions Visualizations</h2>
+              <!-- <p class="lead">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Vero odio fugiat voluptatem dolor, provident officiis, id iusto! Obcaecati incidunt, qui nihil beatae magnam et repudiandae ipsa exercitationem, in, quo totam.</p> -->
+              <p class="lead">Here we show some images with its respective prediction.</p>
+                <pre data-lang='scss' class='prettyprint'>
+                    <code>
+                        sample_test = test_df.sample(n=9).reset_index()
+                        sample_test.head()
+                        plt.figure(figsize=(12, 12))
+                        for index, row in sample_test.iterrows():
+                            filename = row['filename']
+                            category = row['category']
+                            img = load_img("/content/drive/My Drive/test2_catsdogs/"+filename, target_size=(256, 256))
+                            plt.subplot(3, 3, index+1)
+                            plt.imshow(img)
+                            plt.xlabel(filename + '(' + "{}".format(category) + ')')
+                        plt.tight_layout()
+                        plt.show()
+                    </code>
+                </pre>
+            </div>
+          </div>
+        </div>
+    </section>
+    
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Plugin JavaScript -->
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+
+    <!-- Custom JavaScript for this theme -->
+    <script src="js/scrolling-nav.js"></script>
+
+    <!-- Java Script -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+</body>
+</html>
