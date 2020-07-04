@@ -45,17 +45,12 @@
           <p class="lead" style="color: #000000;">Training VGG16 with Transfer Learning</p>
         </div>
     </header>
-    
-    <!-- <div class="header-img">
-        <h1> Cat vs Dog Classification using Transfer Learning </h1>
-    </div>
-     -->
 
     <section id="about">
         <div class="container">
           <div class="row">
             <div class="col-lg-8 mx-auto">
-              <h2>Cats vs. Dogs Competition</h2>
+              <h2>About Competition</h2>
               <p class="lead">As part of <a href="https://www.kaggle.com/c/dogs-vs-cats" target="_blank">Kaggle competitions</a>, this one refers to a classification between cats and dogs according to a set of images.
                 In this post, the algorithm that we will use to solve this problem is with Convolutional Neural Networks (CNN), using the VGG16 arquitecture with ImageNet as a pre-train model with Transfer Learning.</p>
             </div>
@@ -71,23 +66,23 @@
                 <p class="lead"> We start importing the libraries for the analysis.</p>
                 <pre style="text-align: left;">
                     <code style="text-align: left;">
-        import numpy as np
-        import pandas as pd
-        import matplotlib.pyplot as plt
-        import random
-        import os
+                        import numpy as np
+                        import pandas as pd
+                        import matplotlib.pyplot as plt
+                        import random
+                        import os
 
-        from keras.preprocessing.image import ImageDataGenerator, load_img
-        from keras.utils import to_categorical
-        from sklearn.model_selection import train_test_split
-        from keras.applications import VGG16
-        from keras.models import Model
-        from keras.layers import Dropout, Flatten, Dense
-        from keras.layers.convolutional import Conv2D, MaxPooling2D
-        from keras import backend as K
-        from keras import optimizers
-        from skimage.transform import resize
-        from sklearn.preprocessing import StandardScaler
+                        from keras.preprocessing.image import ImageDataGenerator, load_img
+                        from keras.utils import to_categorical
+                        from sklearn.model_selection import train_test_split
+                        from keras.applications import VGG16
+                        from keras.models import Model
+                        from keras.layers import Dropout, Flatten, Dense
+                        from keras.layers.convolutional import Conv2D, MaxPooling2D
+                        from keras import backend as K
+                        from keras import optimizers
+                        from skimage.transform import resize
+                        from sklearn.preprocessing import StandardScaler
                     </code>
                 </pre>
 
@@ -96,37 +91,37 @@
                 </p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
-        filenames = os.listdir("/content/drive/My Drive/train_catsdogs")
+                        filenames = os.listdir("/content/drive/My Drive/train_catsdogs")
 
-        categories = []
+                        categories = []
 
-        for f_name in filenames:
-            category = f_name.split('.')[0]
-            if category == 'dog':
-                categories.append(1)
-            else:
-                categories.append(0)
+                        for f_name in filenames:
+                            category = f_name.split('.')[0]
+                            if category == 'dog':
+                                categories.append(1)
+                            else:
+                                categories.append(0)
 
-        df = pd.DataFrame({'filename': filenames, 'category': categories})
+                        df = pd.DataFrame({'filename': filenames, 'category': categories})
                     </code>
                 </pre>
 
                 <p class="lead"> If we want to visualize an image used for training, we can use the next block.</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
-        sample = random.choice(filenames)
-        image = load_img("/content/drive/My Drive/train_catsdogs/" + sample)
-        plt.imshow(image)
+                        sample = random.choice(filenames)
+                        image = load_img("/content/drive/My Drive/train_catsdogs/" + sample)
+                        plt.imshow(image)
                     </code>
                 </pre>
 
                 <p class="lead"> Before setting the training and validation datasets, we assign the values for image size, epochs and batch size.</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
-        image_size = 224
-        input_shape = (image_size, image_size, 3)
-        epochs = 20 
-        batch_size = 40
+                        image_size = 224
+                        input_shape = (image_size, image_size, 3)
+                        epochs = 20 
+                        batch_size = 40
                     </code>
                 </pre>
 
@@ -135,10 +130,10 @@
                 </p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
-        df["category"] = df["category"].replace({0:'cat',1:'dog'})
-        train_df, validate_df = train_test_split(df, test_size=0.10) 
-        train_df = train_df.reset_index()
-        total_train = train_df.shape[0]
+                        df["category"] = df["category"].replace({0:'cat',1:'dog'})
+                        train_df, validate_df = train_test_split(df, test_size=0.10) 
+                        train_df = train_df.reset_index()
+                        total_train = train_df.shape[0]
                     </code>
                 </pre>
 
@@ -146,95 +141,95 @@
                     to the images in the training set.</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
-        train_datagen = ImageDataGenerator(rotation_range=15, rescale=1./255, 
-                        shear_range=0.2, zoom_range=0.2, 
-                        horizontal_flip = True, width_shift_range=0.1, 
-                        height_shift_range=0.1)
+                        train_datagen = ImageDataGenerator(rotation_range=15, rescale=1./255, 
+                                    shear_range=0.2, zoom_range=0.2, 
+                                    horizontal_flip = True, width_shift_range=0.1, 
+                                    height_shift_range=0.1)
 
-        train_generator = train_datagen.flow_from_dataframe(train_df, 
-                        "/content/drive/My Drive/train_catsdogs", x_col='filename', 
-                        y_col='category', target_size=(image_size, 
-                        image_size), class_mode='binary', batch_size=batch_size)
+                        train_generator = train_datagen.flow_from_dataframe(train_df, 
+                                    "/content/drive/My Drive/train_catsdogs", x_col='filename', 
+                                    y_col='category', target_size=(image_size, 
+                                    image_size), class_mode='binary', batch_size=batch_size)
                     </code>
                 </pre>
 
                 <p class="lead">The same method is done for the validation set, we use data augmentation to "obtain" more data.</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
-        validate_df = validate_df.reset_index()
-        total_validate = validate_df.shape[0]
+                        validate_df = validate_df.reset_index()
+                        total_validate = validate_df.shape[0]
 
-        validation_datagen = ImageDataGenerator(rescale=1./255)
+                        validation_datagen = ImageDataGenerator(rescale=1./255)
 
-        validation_generator = validation_datagen.flow_from_dataframe(
-                        validate_df, 
-                        "/content/drive/My Drive/train_catsdogs", 
-                        x_col='filename', y_col='category',
-                        class_mode='binary',
-                        target_size=(image_size, image_size),
-                        batch_size=batch_size)
+                        validation_generator = validation_datagen.flow_from_dataframe(
+                                validate_df, 
+                                "/content/drive/My Drive/train_catsdogs", 
+                                x_col='filename', y_col='category',
+                                class_mode='binary',
+                                target_size=(image_size, image_size),
+                                batch_size=batch_size)
                     </code>
                 </pre>
 
                 <p class="lead">Now that we have out training and validation datasets, we develop the model by importing the VGG16 arquitecture and the weights from ImageNet.</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
-        model = VGG16(input_shape=input_shape, weights='imagenet', include_top=False)
+                        model = VGG16(input_shape=input_shape, weights='imagenet', include_top=False)
                     </code>
                 </pre>
 
                 <p class="lead"> For Transfer Learning, we freeze all layers so they won't change during the training.</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
-        for layer in model.layers:
-                layer.trainable = False
+                        for layer in model.layers:
+                            layer.trainable = False
                     </code>
                 </pre>
 
                 <p class="lead"> The layers are arange as...</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
-        x = model.output
+                        x = model.output
 
-        x = Conv2D(1, (1,1), activation='relu')(x)
-        x = Flatten()(x)
-        x = Dense(512, activation='relu')(x)
-        x = Dropout(0.5)(x)
-        x = Dense(1, activation='sigmoid')(x)
+                        x = Conv2D(1, (1,1), activation='relu')(x)
+                        x = Flatten()(x)
+                        x = Dense(512, activation='relu')(x)
+                        x = Dropout(0.5)(x)
+                        x = Dense(1, activation='sigmoid')(x)
 
-        model = Model(model.input, x)
+                        model = Model(model.input, x)
                     </code>
                 </pre>
 
                 <p class="lead"> We compile the model.</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
-        model.compile(loss='binary_crossentropy', optimizer='sgd', metrics=['accuracy'])
+                        model.compile(loss='binary_crossentropy', optimizer='sgd', metrics=['accuracy'])
                     </code>
                 </pre>
 
                 <p class="lead"> We can visualize a summary of the model. This is, the parameters to train and layers appearing in our model.</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
-        model.summary()
+                        model.summary()
                     </code>
                 </pre>
 
                 <p class="lead"> We train the model using the training and validation datasets.</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
-        history = model.fit_generator(train_generator, epochs=epochs, 
-                    validation_data=validation_generator, 
-                    validation_steps=total_validate//batch_size, 
-                    steps_per_epoch=total_train//batch_size)
+                        history = model.fit_generator(train_generator, epochs=epochs, 
+                                validation_data=validation_generator, 
+                                validation_steps=total_validate//batch_size, 
+                                steps_per_epoch=total_train//batch_size)
                     </code>
                 </pre>
 
                 <p class="lead"> We can visualize the best accuracy reached during training.</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
-        loss, accuracy = model.evaluate_generator(validation_generator, total_validate//batch_size, workers=12)
-        print("Test: accuracy = %f  ;  loss = %f " % (accuracy, loss))
+                        loss, accuracy = model.evaluate_generator(validation_generator, total_validate//batch_size, workers=12)
+                        print("Test: accuracy = %f  ;  loss = %f " % (accuracy, loss))
                     </code>
                 </pre>
 
@@ -242,36 +237,36 @@
                     but here we do not have the class, this will be predicted. These images were not seen by the training or evaluation process.</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
-        test_filenames = os.listdir("/content/drive/My Drive/test2_catsdogs")
-        test_df = pd.DataFrame({
-                    'filename': test_filenames
-                    })
-        nb_samples = test_df.shape[0]
+                        test_filenames = os.listdir("/content/drive/My Drive/test2_catsdogs")
+                        test_df = pd.DataFrame({
+                                'filename': test_filenames
+                                })
+                        nb_samples = test_df.shape[0]
                     </code>
                 </pre>
 
                 <p class="lead"> Here, we set the image size and the images will be read by the predicting function.</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
-        test_gen = ImageDataGenerator(rescale=1./255)
-        test_generator = test_gen.flow_from_dataframe(
-                        test_df, 
-                        "/content/drive/My Drive/test2_catsdogs", 
-                        x_col='filename', y_col=None,
-                        class_mode=None,
-                        batch_size=batch_size,
-                        target_size=(image_size, image_size),
-                        shuffle=False)   
+                        test_gen = ImageDataGenerator(rescale=1./255)
+                        test_generator = test_gen.flow_from_dataframe(
+                                    test_df, 
+                                    "/content/drive/My Drive/test2_catsdogs", 
+                                    x_col='filename', y_col=None,
+                                    class_mode=None,
+                                    batch_size=batch_size,
+                                    target_size=(image_size, image_size),
+                                    shuffle=False)   
                     </code>
                 </pre>
 
                 <p class="lead">We develop the predictions.</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
-        predict = model.predict_generator(test_generator, steps=np.ceil(nb_samples/batch_size))
-        threshold = 0.5
+                        predict = model.predict_generator(test_generator, steps=np.ceil(nb_samples/batch_size))
+                        threshold = 0.5
 
-        test_df['category'] = np.where(predict > threshold, 1,0)
+                        test_df['category'] = np.where(predict > threshold, 1,0)
                     </code>
                 </pre>   
             </div>
