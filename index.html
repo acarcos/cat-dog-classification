@@ -53,8 +53,13 @@
               <h2>About Competition</h2>
               <p class="lead">As part of <a href="https://www.kaggle.com/c/dogs-vs-cats" target="_blank">Kaggle competitions</a>, this one refers to a classification between cats and dogs according to a set of images.
                 In this post, the algorithm that we will use to solve this problem is with Convolutional Neural Networks (CNN), using the VGG16 arquitecture with ImageNet as a pre-train model with Transfer Learning.</p>
+                <figure class="figure" >
+                    <img src="images/collage2.png" class="figure-img img-fluid rounded" alt="...">
+                    <figcaption class="figure-caption text-right">Kaggle training dataset.</figcaption>
+                </figure>
             </div>
           </div>
+          
         </div>
     </section>
 
@@ -63,7 +68,7 @@
           <div class="row">
             <div class="col-lg-8 mx-auto">
                 <h2>Coding</h2>
-                <p class="lead"> We start importing the libraries for the analysis.</p>
+                <p class="lead"> We start importing the libraries for the analysis, image pre-processing and Keras models for the neural network training.</p>
                 <pre style="text-align: left;">
                     <code style="text-align: left;">
                         import numpy as np
@@ -85,9 +90,9 @@
                         from sklearn.preprocessing import StandardScaler
                     </code>
                 </pre>
-
-                <p class="lead"> Prepare data for the training process. First, we import the dataset. The label in each image give the classification already. 
-                    So we use this to create a dataframe with the filename and its respective class. For dog class, we will use one, and for cat class, zero.
+                
+                <p class="lead"> <i>Prepare data for training process.</i> First, we import the training dataset. The label in each image gives the category already,
+                 so we split the label and build a dataframe to save the filename and its category. We assign zero for cat category, and one for dogs.
                 </p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
@@ -106,14 +111,10 @@
                     </code>
                 </pre>
 
-                <p class="lead"> If we want to visualize an image used for training, we can use the next block.</p>
-                <pre data-lang='scss' class='prettyprint'>
-                    <code>
-                        sample = random.choice(filenames)
-                        image = load_img("/content/drive/My Drive/train_catsdogs/" + sample)
-                        plt.imshow(image)
-                    </code>
-                </pre>
+                <figure class="figure" >
+                    <img src="images/imrand_train.png" class="figure-img img-fluid rounded" alt="...">
+                    <figcaption class="figure-caption text-right">Random image from training dataset.</figcaption>
+                </figure>
 
                 <p class="lead"> Before setting the training and validation datasets, we assign the values for image size, epochs and batch size.</p>
                 <pre data-lang='scss' class='prettyprint'>
@@ -125,7 +126,7 @@
                     </code>
                 </pre>
 
-                <p class="lead">With this information, we prepare the training images by replacing the values of cat and dog for 0 and 1, respectively. Next, we train the data for training and validation.
+                <p class="lead">With this information, we prepare the training categories in the dataframe by replacing the values of cat and dog for 0 and 1, respectively. Next, we define the data for training and validation.
                     The validation set is done to evaluate the model during the training and corresponds to the 10% of the dataset.
                 </p>
                 <pre data-lang='scss' class='prettyprint'>
@@ -137,7 +138,7 @@
                     </code>
                 </pre>
 
-                <p class="lead">To develop the training data, we use data augmentation. This is to "create" more data based on the already dataset we have. This is done by rotating and adding noise 
+                <p class="lead">To develop the training data, we use <ins>data augmentation</ins>. This is to "create" more data based on the already dataset we have. This is done by rotating and adding noise 
                     to the images in the training set.</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
@@ -152,6 +153,11 @@
                                     image_size), class_mode='binary', batch_size=batch_size)
                     </code>
                 </pre>
+
+                <figure class="figure" >
+                    <img src="images/example.jpg" class="figure-img img-fluid rounded" alt="...">
+                    <figcaption class="figure-caption text-right">Data augmentation visualization.</figcaption>
+                </figure>
 
                 <p class="lead">The same method is done for the validation set, we use data augmentation to "obtain" more data.</p>
                 <pre data-lang='scss' class='prettyprint'>
@@ -171,14 +177,14 @@
                     </code>
                 </pre>
 
-                <p class="lead">Now that we have out training and validation datasets, we develop the model by importing the VGG16 arquitecture and the weights from ImageNet.</p>
+                <p class="lead"><i>Develop the neural network model.</i> Now that we have our training and validation datasets, we develop the model by importing the VGG16 arquitecture and the weights from ImageNet.</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
                         model = VGG16(input_shape=input_shape, weights='imagenet', include_top=False)
                     </code>
                 </pre>
 
-                <p class="lead"> For Transfer Learning, we freeze all layers so they won't change during the training.</p>
+                <p class="lead"> In this model, we use <ins>transfer learning</ins>. This is, we freeze all layers so they won't change during the training.</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
                         for layer in model.layers:
@@ -201,17 +207,10 @@
                     </code>
                 </pre>
 
-                <p class="lead"> We compile the model.</p>
+                <p class="lead"> We add loss function, optimizer and metrics to the model.</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
                         model.compile(loss='binary_crossentropy', optimizer='sgd', metrics=['accuracy'])
-                    </code>
-                </pre>
-
-                <p class="lead"> We can visualize a summary of the model. This is, the parameters to train and layers appearing in our model.</p>
-                <pre data-lang='scss' class='prettyprint'>
-                    <code>
-                        model.summary()
                     </code>
                 </pre>
 
@@ -225,15 +224,20 @@
                     </code>
                 </pre>
 
-                <p class="lead"> We can visualize the best accuracy reached during training.</p>
+                <figure class="figure" >
+                    <img src="images/train.png" class="figure-img img-fluid rounded" alt="...">
+                    <figcaption class="figure-caption text-right">Display training.</figcaption>
+                </figure>
+
+                <p class="lead"> The best accuracy obtained was...</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
-                        loss, accuracy = model.evaluate_generator(validation_generator, total_validate//batch_size, workers=12)
-                        print("Test: accuracy = %f  ;  loss = %f " % (accuracy, loss))
+                        Accuracy = 0.875000  ;  loss = 0.379309 
                     </code>
                 </pre>
 
-                <p class="lead">To make predictions using this training, we prepare a test dataset. Same as with the training and validation sets, we make a dataframe for each image
+                <p class="lead"><i>Test model. </i> A way to prove the training was efficient is to display the predictions for the test set. 
+                    Same as with the training and validation sets, we make a dataframe for each image file 
                     but here we do not have the class, this will be predicted. These images were not seen by the training or evaluation process.</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
@@ -260,7 +264,7 @@
                     </code>
                 </pre>
 
-                <p class="lead">We develop the predictions.</p>
+                <p class="lead">We call the prediction function and assign the category of 0/1 according to the probabilities for each class.</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
                         predict = model.predict_generator(test_generator, steps=np.ceil(nb_samples/batch_size))
@@ -278,9 +282,9 @@
         <div class="container">
           <div class="row">
             <div class="col-lg-8 mx-auto">
-              <h2>Predictions Visualizations</h2>
+              <h2>Prediction Visualization</h2>
               <!-- <p class="lead">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Vero odio fugiat voluptatem dolor, provident officiis, id iusto! Obcaecati incidunt, qui nihil beatae magnam et repudiandae ipsa exercitationem, in, quo totam.</p> -->
-              <p class="lead">Here we show some images with its respective prediction.</p>
+              <p class="lead">Here we show some images with its respective prediction using the testing set by the competition.</p>
                 <pre data-lang='scss' class='prettyprint'>
                     <code>
                         sample_test = test_df.sample(n=9).reset_index()
@@ -289,14 +293,25 @@
                         for index, row in sample_test.iterrows():
                             filename = row['filename']
                             category = row['category']
-                            img = load_img("/content/drive/My Drive/test2_catsdogs/"+filename, target_size=(256, 256))
+                            img = load_img("/content/drive/My Drive/test_catsdogs/"+filename, target_size=(256, 256))
                             plt.subplot(3, 3, index+1)
                             plt.imshow(img)
                             plt.xlabel(filename + '(' + "{}".format(category) + ')')
                         plt.tight_layout()
-                        plt.show()
                     </code>
                 </pre>
+
+                <figure class="figure" >
+                    <img src="images/prediction3.png" class="figure-img img-fluid rounded" alt="...">
+                    <figcaption class="figure-caption text-right">Testing dataset.</figcaption>
+                </figure>
+
+                <p class="lead">As a second test, we use another dataset based on personal and internet images. With this images, we can visualize that the model fails at certain pictures.</p>
+
+                <figure class="figure" >
+                    <img src="images/pred3.png" class="figure-img img-fluid rounded" alt="...">
+                    <figcaption class="figure-caption text-right">Testing dataset.</figcaption>
+                </figure>
             </div>
           </div>
         </div>
