@@ -6,7 +6,7 @@
 
 This competition consists to create an algorithm to classify whether images contain either a dog or a cat. This is easy for humans, dogs, and cats. The computer will find it a bit more difficult.
 
-## Data set
+## Data Set
 
 Asirra (Animal Species Image Recognition for Restricting Access) is a HIP that works by asking users to identify photographs of cats and dogs. This task is difficult for computers, but studies have shown that people can accomplish it quickly and accurately.
 
