@@ -26,7 +26,7 @@ While random guessing is the easiest form of attack, various forms of image reco
 
 Here is a view of some testing images (0: cat, 1: dog).
 
-<img src="images/prediction2.jpg" width=600>
+<img src="images/vg1.png" width=600>
 
 
 ### References
